@@ -168,17 +168,15 @@
           to your bookmarks bar, then click it on your app.
         </p>
         <p class="tb-hint" style="margin-top:.5rem"><strong>Or paste in the console</strong> (works under strict CSP):</p>
-        <div class="tb-row" style="gap:.5rem">
-          <textarea class="input" readonly rows="2" style="flex:1;font-family:monospace;font-size:11px"
-            x-ref="snippet">import('https://eduwass.github.io/tweakbasecoat/inject.js')</textarea>
-          <button class="tb-ghost" @click="navigator.clipboard.writeText($refs.snippet.value); $el.textContent='Copied!'; setTimeout(()=>$el.textContent='Copy',1200)">Copy</button>
-        </div>
+        <button class="tb-code-copy" @click="navigator.clipboard.writeText($el.querySelector('code').textContent); $el.querySelector('.tb-copy-label').textContent='Copied!'; setTimeout(()=>$el.querySelector('.tb-copy-label').textContent='Copy',1200)">
+          <code>import('https://eduwass.github.io/tweakbasecoat/inject.js')</code>
+          <span class="tb-copy-label">Copy</span>
+        </button>
         <p class="tb-hint" style="margin-top:.5rem"><strong>Or drop it in your dev HTML</strong> &lt;head&gt; (panel rides along on every reload — remove before shipping):</p>
-        <div class="tb-row" style="gap:.5rem">
-          <textarea class="input" readonly rows="2" style="flex:1;font-family:monospace;font-size:11px"
-            x-ref="tag">&lt;script type="module" src="https://eduwass.github.io/tweakbasecoat/inject.js">&lt;/script></textarea>
-          <button class="tb-ghost" @click="navigator.clipboard.writeText($refs.tag.value); $el.textContent='Copied!'; setTimeout(()=>$el.textContent='Copy',1200)">Copy</button>
-        </div>
+        <button class="tb-code-copy" @click="navigator.clipboard.writeText($el.querySelector('code').textContent); $el.querySelector('.tb-copy-label').textContent='Copied!'; setTimeout(()=>$el.querySelector('.tb-copy-label').textContent='Copy',1200)">
+          <code>&lt;script type="module" src="https://eduwass.github.io/tweakbasecoat/inject.js">&lt;/script></code>
+          <span class="tb-copy-label">Copy</span>
+        </button>
       </details>
 
       <div class="tb-actions">
