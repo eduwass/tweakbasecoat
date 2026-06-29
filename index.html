@@ -169,6 +169,12 @@
             x-ref="snippet">import('https://eduwass.github.io/tweakbasecoat/inject.js')</textarea>
           <button class="tb-ghost" @click="navigator.clipboard.writeText($refs.snippet.value); $el.textContent='Copied!'; setTimeout(()=>$el.textContent='Copy',1200)">Copy</button>
         </div>
+        <p class="tb-hint" style="margin-top:.5rem"><strong>Or drop it in your dev HTML</strong> &lt;head&gt; (panel rides along on every reload — remove before shipping):</p>
+        <div class="tb-row" style="gap:.5rem">
+          <textarea class="input" readonly rows="2" style="flex:1;font-family:monospace;font-size:11px"
+            x-ref="tag">&lt;script type="module" src="https://eduwass.github.io/tweakbasecoat/inject.js">&lt;/script></textarea>
+          <button class="tb-ghost" @click="navigator.clipboard.writeText($refs.tag.value); $el.textContent='Copied!'; setTimeout(()=>$el.textContent='Copy',1200)">Copy</button>
+        </div>
       </details>
 
       <div class="tb-actions">
