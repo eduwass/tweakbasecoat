@@ -86,10 +86,19 @@ Alpine.data("editor", () => ({
       const html = await (await fetch("./_kitchensink.html")).text();
       const preview = document.getElementById("preview");
       preview.innerHTML = html;
-      // It's a static demo — stop the browser's password manager from offering to
-      // autofill the email/password fields (the "fill this login?" prompt on load).
-      preview.querySelectorAll("input, form").forEach((el) => el.setAttribute("autocomplete", "off"));
-      preview.querySelectorAll('input[type="password"]').forEach((el) => (el.type = "text"));
+      // It's a static demo, not a real login. Tag fields so password managers skip them
+      // (autocomplete=off alone is ignored by Bitwarden/1Password/LastPass — they honor
+      // their own data-*ignore attributes). Keeps type=password so it still looks normal.
+      preview.querySelectorAll("input, form").forEach((el) => {
+        el.setAttribute("autocomplete", "off");
+        el.setAttribute("data-bwignore", "true");   // Bitwarden
+        el.setAttribute("data-1p-ignore", "");        // 1Password
+        el.setAttribute("data-lpignore", "true");     // LastPass
+        el.setAttribute("data-form-type", "other");   // Dashlane
+      });
+      preview.querySelectorAll('input[type="password"]').forEach((el) =>
+        el.setAttribute("autocomplete", "new-password")
+      );
     } catch (e) { console.warn("kitchensink load failed", e); }
   },
 
