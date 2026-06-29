@@ -17,6 +17,9 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 
   border-right: 1px solid var(--pc-border);
   background: var(--pc-bg); color: var(--pc-fg);
+  /* Explicit neutral chrome font: the panel must not inherit (and drift with) the edited
+     theme's --font-sans, and inside the inject shadow root there's no body to inherit from. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 13px; line-height: 1.4;
   padding: 1.1rem 1rem 0;
   display: flex; flex-direction: column; gap: .8rem;
