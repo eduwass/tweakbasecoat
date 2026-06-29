@@ -64,6 +64,11 @@ Append `#selftest` to the URL to run the conversion/serialization self-check in 
 
 ## Status
 
-Proof-of-concept spike. Working: live theming, pack switching, dark/light, culori conversion,
-`theme.css` export. Not yet built: typography/font controls, shadow editor, chart + sidebar
-token groups, import-existing-theme, shareable URLs, the full multi-tab demo gallery.
+Working: live colour theming, radius, dark/light, **typography** (sans/serif/mono with Google
+Fonts loaded on demand + letter-spacing), **shadow editor** (colour/opacity/blur/spread/offset
+driving the full `--shadow-*` scale), **23 built-in tweakcn preset themes** (searchable picker),
+style-pack switching, localStorage persistence, culori conversion, and `theme.css` export. The
+editor chrome uses a fixed neutral palette so it stays legible regardless of the edited theme.
+
+Not yet built: chart + sidebar token controls, import-existing-theme, shareable URLs, the full
+multi-tab demo gallery.
