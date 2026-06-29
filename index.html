@@ -4,9 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>tweakbasecoat — visual theme editor for Basecoat</title>
-  <!-- Tailwind utilities + Basecoat components, precompiled against the kitchen-sink markup.
-       (The CDN component bundle alone lacks the raw Tailwind layout utilities the demo uses.) -->
-  <link id="basecoat-style" rel="stylesheet" href="./preview.css" />
+  <!-- Tailwind v4 browser JIT: compiles whatever raw utility classes appear in the DOM
+       (incl. the injected kitchen-sink: grid/gap/flex/etc.) at runtime — zero build step. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Basecoat components + theme: self-contained CDN pack bundle, swapped on pack change. -->
+  <link id="basecoat-style" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/basecoat.cdn.min.css" />
   <link rel="stylesheet" href="./app.css" />
   <script type="module" src="./app.js"></script>
 </head>
