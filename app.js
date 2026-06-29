@@ -47,6 +47,7 @@ const PRESET = {
 };
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
+const STORE_KEY = "tweakbasecoat:v1";
 
 // hex (or any css color) -> "oklch(L C H)"  — the format Basecoat/Tailwind v4 ships.
 const toOklch = (value) => {
@@ -74,6 +75,14 @@ Alpine.data("editor", () => ({
   themeQuery: "",
 
   async init() {
+    // Restore the last session's edits, if any.
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (saved) {
+        Object.assign(this, { tokens: saved.tokens, radius: saved.radius, mode: saved.mode, pack: saved.pack, themeName: saved.themeName });
+        if (this.pack !== "basecoat") document.getElementById("basecoat-style").href = packHref(this.pack);
+      }
+    } catch (e) { console.warn("restore failed", e); }
     this.apply();
     // Built-in default + tweakcn preset themes (fetched from their registry, bundled as JSON).
     this.presets = [{ slug: "default", name: "Default", radius: "0.625", light: PRESET.light, dark: PRESET.dark }];
@@ -143,11 +152,22 @@ Alpine.data("editor", () => ({
       root.style.setProperty(`--${k}`, toOklch(v));
     }
     root.style.setProperty("--radius", `${this.radius}rem`);
+    this.persist();
+  },
+
+  persist() {
+    const { tokens, radius, mode, pack, themeName } = this;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ tokens, radius, mode, pack, themeName }));
+    } catch (e) { /* storage full / disabled — non-fatal */ }
   },
 
   reset() {
     this.tokens = clone(PRESET);
     this.radius = "0.625";
+    this.themeName = "Default";
+    this.pack = "basecoat";
+    document.getElementById("basecoat-style").href = packHref(this.pack);
     this.apply();
   },
 
