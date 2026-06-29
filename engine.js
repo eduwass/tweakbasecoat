@@ -69,9 +69,18 @@ export const toOklch = (value) => {
 };
 export const toHex = (value) => culori.formatHex(culori.parse(value)) || "#000000";
 
-// Non-color tokens (fonts, shadow primitives, tracking) pass through verbatim — don't oklch them.
-export const isNonColor = (k) => /^(font-|shadow-|tracking|letter-spacing|spacing$)/.test(k);
+// Non-color tokens (fonts, shadow primitives, tracking, radius) pass through verbatim —
+// don't oklch them. Everything else is a color and gets converted on the way out.
+export const isNonColor = (k) => /^(font-|shadow-|tracking|letter-spacing|radius$|spacing$)/.test(k);
 export const cssVal = (k, v) => (isNonColor(k) ? v : toOklch(v));
+// Which tokens render as a colour swatch in the UI (distinct from cssVal: this is the
+// "show a color picker / treat as a palette entry" predicate, not the serializer).
+export const isColorKey = (k) => COLOR_KEYS.includes(k) || /^(chart-|sidebar)/.test(k);
+
+// The one canonical way to emit a custom-property line and a selector block. Shared by the
+// sidebar's theme.css export and the inject panel's live copy so the output can never drift.
+export const cssVar = ([k, v]) => `  --${k}: ${cssVal(k, v)};`;
+export const tokenBlock = (selector, entries) => `${selector} {\n${entries.map(cssVar).join("\n")}\n}\n`;
 
 // "H S% L%" (Tailwind v3 / shadow style, no hsl() wrapper).
 export const toHsl3 = (value) => {
@@ -146,17 +155,6 @@ export const computeShadowMap = (s) => {
     "shadow-xl": `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("8px", "10px")}`,
     "shadow-2xl": `${ox} ${oy} ${blur} ${spread} ${color(2.5)}`,
   };
-};
-
-// Write the derived shadow scale + radius onto a root, and return the keys touched.
-// Shared so the sidebar and the inject panel elevate identically.
-export const applyShadowAndRadius = (root, tokens, radius, set) => {
-  root.style.setProperty("--radius", `${radius}rem`);
-  set?.add("radius");
-  for (const [k, v] of Object.entries(computeShadowMap(tokens))) {
-    root.style.setProperty(`--${k}`, v);
-    set?.add(k);
-  }
 };
 
 // Inject a Google Fonts <link> once per family. Goes on the host document head (fonts

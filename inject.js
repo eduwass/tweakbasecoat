@@ -9,14 +9,14 @@
 // it edits the *host* document's :root and seeds from the live theme.
 import {
   COLOR_KEYS, FONT_KEYS, SYSTEM_FONTS, FALLBACK,
-  toOklch, toHex, famOf, buildFontMenus, loadFont,
+  toHex, famOf, buildFontMenus, loadFont,
+  cssVal, cssVar, tokenBlock, isColorKey,
 } from "./engine.js";
 
 if (window.__tbInject) {
   window.__tbInject.toggle();
 } else {
   const BASE = new URL(".", import.meta.url); // wherever this script is hosted (Pages)
-  const isColor = (k) => COLOR_KEYS.includes(k) || /^(chart-|sidebar)/.test(k);
 
   // Lucide icons (same set the sidebar uses) — group headers + mode/footer.
   const ICON = {
@@ -41,10 +41,9 @@ if (window.__tbInject) {
     const v = read(k);
     if (v) { baseline[k] = v; tokens[k] = v; }
   }
-  const emit = (k, v) => (isColor(k) ? toOklch(v) : v);
   const apply = (k, v) => {
     tokens[k] = v;
-    root.style.setProperty("--" + k, emit(k, v));
+    root.style.setProperty("--" + k, cssVal(k, v));
   };
 
   // ---- panel (shadow DOM so host styles can't touch it, and vice versa) --------------
@@ -170,13 +169,12 @@ if (window.__tbInject) {
   const [copyBtn, agentBtn] = footer.querySelectorAll("button");
   $(".tb-panel").appendChild(footer);
 
-  const blockOf = (entries) => `${sel} {\n${entries.map(([k, v]) => `  --${k}: ${emit(k, v)};`).join("\n")}\n}\n`;
   const flash = (btn, msg) => { const old = btn.textContent; btn.textContent = msg; setTimeout(() => (btn.textContent = old), 1300); };
   copyBtn.addEventListener("click", () =>
-    navigator.clipboard.writeText(blockOf(Object.entries(tokens))).then(() => flash(copyBtn, "✓ Copied")));
+    navigator.clipboard.writeText(tokenBlock(sel, Object.entries(tokens))).then(() => flash(copyBtn, "✓ Copied")));
   agentBtn.addEventListener("click", () => {
-    const changed = Object.entries(tokens).filter(([k, v]) => !(k in baseline) || emit(k, v) !== emit(k, baseline[k]));
-    const css = changed.length ? blockOf(changed) : "/* no changes yet */";
+    const changed = Object.entries(tokens).filter(([k, v]) => !(k in baseline) || cssVar([k, v]) !== cssVar([k, baseline[k]]));
+    const css = changed.length ? tokenBlock(sel, changed) : "/* no changes yet */";
     const prompt = `Apply this Basecoat theme override to my global stylesheet (the \`${sel}\` block). Only these tokens changed:\n\n\`\`\`css\n${css}\`\`\``;
     navigator.clipboard.writeText(prompt).then(() => flash(agentBtn, "✓ Copied"));
   });
@@ -184,7 +182,7 @@ if (window.__tbInject) {
   // ---- presets + pooled font menus from the hosted bundle ----------------------------
   const applyPreset = (p) => {
     const src = (mode === "dark" ? p.dark : p.light) || p.light;
-    for (const [k, v] of Object.entries(src)) if (isColor(k) || k.startsWith("font-")) apply(k, v);
+    for (const [k, v] of Object.entries(src)) if (isColorKey(k) || k.startsWith("font-")) apply(k, v);
     if (p.radius != null) { apply("radius", p.radius + "rem"); radiusInput.value = p.radius; radiusOut.textContent = p.radius + "rem"; }
     for (const k of COLOR_KEYS) if (colorInputs[k] && tokens[k]) try { colorInputs[k].value = toHex(tokens[k]); } catch {}
     for (const k of FONT_KEYS) { const fam = famOf(tokens[k]); if (fam) { loadFont(fam); fontSelects[k].value = fam; } }

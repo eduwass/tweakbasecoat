@@ -6,7 +6,7 @@
 import Alpine from "https://esm.sh/alpinejs@3.14.1";
 import {
   PACKS, packHref, COLOR_KEYS, PRESET, clone, STORE_KEY,
-  encodeState, decodeState, toOklch, toHex, cssVal,
+  encodeState, decodeState, toOklch, toHex, cssVal, cssVar,
   FONTS, FONT_KEYS, buildFontMenus, FALLBACK, SYSTEM_FONTS,
   DEFAULT_TYPO, DEFAULT_SHADOW, famOf, computeShadowMap, loadFont,
 } from "./engine.js";
@@ -189,21 +189,20 @@ Alpine.data("editor", () => ({
   toCss() {
     const isExtended = (k) => /^(chart-|sidebar)/.test(k);
     const isShadow = (k) => /^shadow/.test(k);
-    const line = ([k, v]) => `  --${k}: ${cssVal(k, v)};`;
 
     const block = (sel, obj) => {
       const entries = Object.entries(obj).filter(([k]) => !isShadow(k));
       const core = entries.filter(([k]) => !isExtended(k));
       const ext = entries.filter(([k]) => isExtended(k));
-      let lines = [`  --radius: ${this.radius}rem;`, ...core.map(line)];
+      let lines = [`  --radius: ${this.radius}rem;`, ...core.map(cssVar)];
       if (this.shadowsOn) {
         lines.push("", "  /* shadow scale (opt-in elevation) */");
-        lines.push(...Object.entries(obj).filter(([k]) => isShadow(k)).map(line));
+        lines.push(...Object.entries(obj).filter(([k]) => isShadow(k)).map(cssVar));
         lines.push(...Object.entries(computeShadowMap(obj)).map(([k, v]) => `  --${k}: ${v};`));
       }
       if (ext.length) {
         lines.push("", "  /* extended shadcn tokens — not consumed by Basecoat components */");
-        lines.push(...ext.map(line));
+        lines.push(...ext.map(cssVar));
       }
       return `${sel} {\n${lines.join("\n")}\n}`;
     };
