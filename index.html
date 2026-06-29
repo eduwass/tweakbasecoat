@@ -154,6 +154,23 @@
 
       <hr class="my-2" />
 
+      <details class="tb-section">
+        <summary class="text-sm font-medium">Tweak your own app live</summary>
+        <p class="tb-hint">Drop this panel into any running Basecoat app, edit on your real
+          components, then copy the CSS (or an agent-ready diff) to apply.</p>
+        <p class="tb-hint" style="margin-top:.5rem">
+          <strong>Bookmarklet:</strong> drag
+          <a class="tb-bookmarklet" href="javascript:(()=>{if(window.__tbInject){window.__tbInject.toggle();return;}var s=document.createElement('script');s.type='module';s.src='https://eduwass.github.io/tweakbasecoat/inject.js';document.body.appendChild(s);})();">🎨 tweakbasecoat</a>
+          to your bookmarks bar, then click it on your app.
+        </p>
+        <p class="tb-hint" style="margin-top:.5rem"><strong>Or paste in the console</strong> (works under strict CSP):</p>
+        <div class="tb-row" style="gap:.5rem">
+          <textarea class="input" readonly rows="2" style="flex:1;font-family:monospace;font-size:11px"
+            x-ref="snippet">import('https://eduwass.github.io/tweakbasecoat/inject.js')</textarea>
+          <button class="tb-ghost" @click="navigator.clipboard.writeText($refs.snippet.value); $el.textContent='Copied!'; setTimeout(()=>$el.textContent='Copy',1200)">Copy</button>
+        </div>
+      </details>
+
       <div class="tb-actions">
         <button class="tb-primary" @click="copyCss()" x-text="copied ? 'Copied!' : 'Copy theme.css'"></button>
         <button class="tb-ghost" @click="reset()">Reset</button>
