@@ -7,6 +7,17 @@
   <!-- Tailwind v4 browser JIT: compiles whatever raw utility classes appear in the DOM
        (incl. the injected kitchen-sink: grid/gap/flex/etc.) at runtime — zero build step. -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Register the chart colors in the JIT theme so bg-chart-*/text-chart-* utilities are
+       emitted; `inline` makes them reference the live --chart-* vars our presets/apply set. -->
+  <style type="text/tailwindcss">
+    @theme inline {
+      --color-chart-1: var(--chart-1);
+      --color-chart-2: var(--chart-2);
+      --color-chart-3: var(--chart-3);
+      --color-chart-4: var(--chart-4);
+      --color-chart-5: var(--chart-5);
+    }
+  </style>
   <!-- Basecoat components + theme: self-contained CDN pack bundle, swapped on pack change. -->
   <link id="basecoat-style" rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/basecoat.cdn.min.css" />

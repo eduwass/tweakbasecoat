@@ -84,7 +84,12 @@ Alpine.data("editor", () => ({
     // Inject Basecoat's homepage kitchen-sink as the live preview.
     try {
       const html = await (await fetch("./_kitchensink.html")).text();
-      document.getElementById("preview").innerHTML = html;
+      const preview = document.getElementById("preview");
+      preview.innerHTML = html;
+      // It's a static demo — stop the browser's password manager from offering to
+      // autofill the email/password fields (the "fill this login?" prompt on load).
+      preview.querySelectorAll("input, form").forEach((el) => el.setAttribute("autocomplete", "off"));
+      preview.querySelectorAll('input[type="password"]').forEach((el) => (el.type = "text"));
     } catch (e) { console.warn("kitchensink load failed", e); }
   },
 
