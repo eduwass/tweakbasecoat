@@ -68,15 +68,37 @@ Alpine.data("editor", () => ({
   tokens: clone(PRESET),
   copied: false,
 
+  presets: [],
+  themeName: "Default",
+  themeOpen: false,
+  themeQuery: "",
+
   async init() {
     this.apply();
+    // Built-in default + tweakcn preset themes (fetched from their registry, bundled as JSON).
+    this.presets = [{ slug: "default", name: "Default", radius: "0.625", light: PRESET.light, dark: PRESET.dark }];
+    try {
+      const list = await (await fetch("./presets.json")).json();
+      this.presets.push(...list);
+    } catch (e) { console.warn("presets load failed", e); }
     // Inject Basecoat's homepage kitchen-sink as the live preview.
     try {
       const html = await (await fetch("./_kitchensink.html")).text();
       document.getElementById("preview").innerHTML = html;
-    } catch (e) {
-      console.warn("kitchensink load failed", e);
-    }
+    } catch (e) { console.warn("kitchensink load failed", e); }
+  },
+
+  // 4-dot swatch summary for a preset, like tweakcn's theme list.
+  swatch(p) {
+    return ["primary", "secondary", "accent", "background"].map((k) => toHex(p.light[k] || "#888"));
+  },
+
+  loadPreset(p) {
+    this.tokens = { light: { ...p.light }, dark: { ...(p.dark || p.light) } };
+    this.radius = p.radius ?? "0.625";
+    this.themeName = p.name;
+    this.themeOpen = false;
+    this.apply();
   },
 
   hexOf(key) {

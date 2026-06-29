@@ -22,6 +22,32 @@
         <p class="text-muted-foreground text-sm">visual theme editor for Basecoat</p>
       </header>
 
+      <div class="tb-theme" @click.outside="themeOpen = false">
+        <label class="text-sm font-medium">Theme</label>
+        <button class="tb-theme-btn" @click="themeOpen = !themeOpen">
+          <span class="tb-dots">
+            <template x-for="(c, i) in swatch(presets.find(p => p.name === themeName) || presets[0])" :key="i">
+              <i :style="`background:${c}`"></i>
+            </template>
+          </span>
+          <span class="flex-1 text-left text-sm" x-text="themeName"></span>
+          <span class="text-muted-foreground">▾</span>
+        </button>
+        <div class="tb-theme-menu" x-show="themeOpen" x-cloak>
+          <input class="input tb-theme-search" type="text" placeholder="Search themes…" x-model="themeQuery" />
+          <div class="tb-theme-list">
+            <template x-for="p in presets.filter(p => p.name.toLowerCase().includes((themeQuery||'').toLowerCase()))" :key="p.slug">
+              <button class="tb-theme-item" :class="{ 'is-active': p.name === themeName }" @click="loadPreset(p)">
+                <span class="tb-dots">
+                  <template x-for="(c, i) in swatch(p)" :key="i"><i :style="`background:${c}`"></i></template>
+                </span>
+                <span class="text-sm" x-text="p.name"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+
       <div class="tb-row">
         <label class="text-sm font-medium">Style pack</label>
         <select class="select" x-model="pack" @change="setPack()">
