@@ -106,7 +106,8 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 .tb-color input[type="color"]::-moz-color-swatch { border: 0; border-radius: 6px; }
 
 /* ── Collapsible sections ── */
-.tb-section { display: flex; flex-direction: column; gap: .45rem; }
+.tb-section { display: flex; flex-direction: column; gap: .7rem; }
+.tb-section > summary { margin-bottom: .15rem; }
 .tb-section > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: .4rem; user-select: none; }
 .tb-section > summary::-webkit-details-marker { display: none; }
 .tb-ico { flex-shrink: 0; color: var(--pc-muted); }
