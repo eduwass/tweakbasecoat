@@ -37,71 +37,81 @@
         </a>
       </header>
 
-      <div class="tb-theme" @click.outside="themeOpen = false">
-        <label class="text-sm font-medium">Theme</label>
-        <button class="tb-theme-btn" @click="themeOpen = !themeOpen">
-          <span class="tb-dots">
-            <template x-for="(c, i) in swatch(presets.find(p => p.name === themeName) || presets[0])" :key="i">
-              <i :style="`background:${c}`"></i>
-            </template>
-          </span>
-          <span class="flex-1 text-left text-sm" x-text="themeName"></span>
-          <span class="text-muted-foreground">▾</span>
-        </button>
-        <div class="tb-theme-menu" x-show="themeOpen" x-cloak>
-          <input class="input tb-theme-search" type="text" placeholder="Search themes…" x-model="themeQuery" />
-          <div class="tb-theme-list">
-            <template x-for="p in presets.filter(p => p.name.toLowerCase().includes((themeQuery||'').toLowerCase()))" :key="p.slug">
-              <button class="tb-theme-item" :class="{ 'is-active': p.name === themeName }" @click="loadPreset(p)">
-                <span class="tb-dots">
-                  <template x-for="(c, i) in swatch(p)" :key="i"><i :style="`background:${c}`"></i></template>
-                </span>
-                <span class="text-sm" x-text="p.name"></span>
-              </button>
-            </template>
+      <details class="tb-section" open>
+        <summary>
+          <svg class="tb-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+          Base
+        </summary>
+        <div class="tb-theme" @click.outside="themeOpen = false">
+          <button class="tb-theme-btn" @click="themeOpen = !themeOpen">
+            <span class="tb-dots">
+              <template x-for="(c, i) in swatch(presets.find(p => p.name === themeName) || presets[0])" :key="i">
+                <i :style="`background:${c}`"></i>
+              </template>
+            </span>
+            <span class="flex-1 text-left text-sm" x-text="themeName"></span>
+            <span class="text-muted-foreground">▾</span>
+          </button>
+          <div class="tb-theme-menu" x-show="themeOpen" x-cloak>
+            <input class="input tb-theme-search" type="text" placeholder="Search themes…" x-model="themeQuery" />
+            <div class="tb-theme-list">
+              <template x-for="p in presets.filter(p => p.name.toLowerCase().includes((themeQuery||'').toLowerCase()))" :key="p.slug">
+                <button class="tb-theme-item" :class="{ 'is-active': p.name === themeName }" @click="loadPreset(p)">
+                  <span class="tb-dots">
+                    <template x-for="(c, i) in swatch(p)" :key="i"><i :style="`background:${c}`"></i></template>
+                  </span>
+                  <span class="text-sm" x-text="p.name"></span>
+                </button>
+              </template>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="tb-row">
-        <label>Style pack</label>
-        <select x-model="pack" @change="setPack()">
-          <template x-for="p in packs" :key="p">
-            <option :value="p" x-text="p"></option>
-          </template>
-        </select>
-      </div>
-
-      <div class="tb-row">
-        <label>Mode</label>
-        <button class="tb-mode-toggle" @click="toggleMode()">
-          <span x-text="mode === 'dark' ? '🌙' : '☀️'"></span>
-          <span x-text="mode === 'dark' ? 'Dark' : 'Light'"></span>
-        </button>
-      </div>
-
-      <div class="tb-row">
-        <label>Radius</label>
-        <input type="range" min="0" max="1.5" step="0.025" x-model="radius" @input="apply()" />
-        <span x-text="radius + 'rem'"></span>
-      </div>
-
-      <hr />
-
-      <div class="tb-glabel">Colors</div>
-      <div class="tb-colors">
-        <template x-for="key in colorKeys" :key="key">
-          <label class="tb-color">
-            <input type="color" :value="hexOf(key)" @input="setColor(key, $event.target.value)" />
-            <span x-text="key"></span>
-          </label>
-        </template>
-      </div>
+        <div class="tb-row">
+          <label>Style pack</label>
+          <select x-model="pack" @change="setPack()">
+            <template x-for="p in packs" :key="p">
+              <option :value="p" x-text="p"></option>
+            </template>
+          </select>
+        </div>
+        <div class="tb-row">
+          <label>Mode</label>
+          <button class="tb-mode-toggle" @click="toggleMode()">
+            <span x-text="mode === 'dark' ? '🌙' : '☀️'"></span>
+            <span x-text="mode === 'dark' ? 'Dark' : 'Light'"></span>
+          </button>
+        </div>
+        <div class="tb-row">
+          <label>Radius</label>
+          <input type="range" min="0" max="1.5" step="0.025" x-model="radius" @input="apply()" />
+          <span x-text="radius + 'rem'"></span>
+        </div>
+      </details>
 
       <hr class="my-2" />
 
       <details class="tb-section" open>
-        <summary class="text-sm font-medium">Typography</summary>
+        <summary>
+          <svg class="tb-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M 7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8"/></svg>
+          Colors
+        </summary>
+        <div class="tb-colors">
+          <template x-for="key in colorKeys" :key="key">
+            <label class="tb-color">
+              <input type="color" :value="hexOf(key)" @input="setColor(key, $event.target.value)" />
+              <span x-text="key"></span>
+            </label>
+          </template>
+        </div>
+      </details>
+
+      <hr class="my-2" />
+
+      <details class="tb-section" open>
+        <summary>
+          <svg class="tb-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>
+          Typography
+        </summary>
         <template x-for="key in ['font-sans','font-heading','font-mono']" :key="key">
           <div class="tb-row">
             <label class="text-xs text-muted-foreground" x-text="key.replace('font-','')"></label>
@@ -123,9 +133,13 @@
 
       <hr class="my-2" />
 
-      <div class="tb-section">
+      <details class="tb-section" open>
+        <summary>
+          <svg class="tb-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg>
+          Shadow
+        </summary>
         <div class="tb-shadow-head">
-          <span class="tb-glabel">Shadow</span>
+          <label class="text-xs text-muted-foreground">elevation</label>
           <button class="tb-switch" :class="{ 'is-on': shadowsOn }" @click="toggleShadows()"
                   :aria-pressed="shadowsOn" title="Basecoat is flat by default; enable to opt into elevation">
             <span class="tb-switch-knob"></span>
@@ -154,12 +168,15 @@
             </div>
           </template>
         </div>
-      </div>
+      </details>
 
       <hr class="my-2" />
 
       <details class="tb-section">
-        <summary class="text-sm font-medium">Tweak your own app live</summary>
+        <summary>
+          <svg class="tb-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+          Tweak your own app live
+        </summary>
         <p class="tb-hint">Drop this panel into any running Basecoat app, edit on your real
           components, then copy the CSS (or an agent-ready diff) to apply.</p>
         <p class="tb-hint" style="margin-top:.5rem">

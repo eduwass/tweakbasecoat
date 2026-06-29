@@ -109,6 +109,7 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 .tb-section { display: flex; flex-direction: column; gap: .45rem; }
 .tb-section > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: .4rem; user-select: none; }
 .tb-section > summary::-webkit-details-marker { display: none; }
+.tb-ico { flex-shrink: 0; color: var(--pc-muted); }
 .tb-section > summary::before { content: "›"; transition: transform .15s; font-size: 14px; color: var(--pc-muted); }
 .tb-section[open] > summary::before { transform: rotate(90deg); }
 .tb-row > span { min-width: 2.8rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--pc-muted); font-size: 11.5px; }
