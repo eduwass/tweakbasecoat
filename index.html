@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>tweakbasecoat — visual theme editor for Basecoat</title>
+  <!-- Basecoat: self-contained CDN bundle (Tailwind utilities + components + base theme).
+       Swapped at runtime by the style-pack selector. id lets us change the href. -->
+  <link id="basecoat-style" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/basecoat.cdn.min.css" />
+  <link rel="stylesheet" href="./app.css" />
+  <script type="module" src="./app.js"></script>
+</head>
+<body x-data="editor" :class="{ 'dark': mode === 'dark' }">
+  <div class="tb-layout">
+    <!-- ───────────────── Controls ───────────────── -->
+    <aside class="tb-panel">
+      <header class="tb-panel-head">
+        <h1 class="text-lg font-semibold">tweakbasecoat</h1>
+        <p class="text-muted-foreground text-sm">visual theme editor for Basecoat</p>
+      </header>
+
+      <div class="tb-row">
+        <label class="text-sm font-medium">Style pack</label>
+        <select class="select" x-model="pack" @change="setPack()">
+          <template x-for="p in packs" :key="p">
+            <option :value="p" x-text="p"></option>
+          </template>
+        </select>
+      </div>
+
+      <div class="tb-row">
+        <label class="text-sm font-medium">Mode</label>
+        <button class="btn-outline" @click="toggleMode()" x-text="mode === 'dark' ? 'Dark' : 'Light'"></button>
+      </div>
+
+      <div class="tb-row">
+        <label class="text-sm font-medium">Radius</label>
+        <input type="range" min="0" max="1.5" step="0.025" x-model="radius" @input="apply()" />
+        <span class="text-muted-foreground text-xs" x-text="radius + 'rem'"></span>
+      </div>
+
+      <hr class="my-2" />
+
+      <div class="tb-colors">
+        <template x-for="key in colorKeys" :key="key">
+          <label class="tb-color">
+            <input type="color" :value="hexOf(key)" @input="setColor(key, $event.target.value)" />
+            <span class="text-sm" x-text="key"></span>
+          </label>
+        </template>
+      </div>
+
+      <div class="tb-actions">
+        <button class="btn" @click="copyCss()" x-text="copied ? 'Copied!' : 'Copy theme.css'"></button>
+        <button class="btn-outline" @click="reset()">Reset</button>
+      </div>
+    </aside>
+
+    <!-- ───────────────── Preview ───────────────── -->
+    <main class="tb-preview">
+      <div class="flex gap-2 flex-wrap items-center">
+        <button class="btn">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-destructive">Destructive</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <span class="badge">Badge</span>
+        <span class="badge badge-secondary">Secondary</span>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2 mt-6">
+        <div class="card">
+          <header>
+            <h2>Create an account</h2>
+            <p>Enter your email below to create your account.</p>
+          </header>
+          <section class="grid gap-4">
+            <div class="grid gap-2">
+              <label class="label" for="email">Email</label>
+              <input type="email" class="input" id="email" placeholder="m@example.com" />
+            </div>
+            <div class="grid gap-2">
+              <label class="label" for="pw">Password</label>
+              <input type="password" class="input" id="pw" />
+            </div>
+          </section>
+          <footer class="flex gap-2">
+            <button class="btn-outline">Cancel</button>
+            <button class="btn">Create account</button>
+          </footer>
+        </div>
+
+        <div class="card">
+          <header>
+            <h2>Move Goal</h2>
+            <p>Set your daily activity goal.</p>
+          </header>
+          <section class="grid gap-3">
+            <div role="alert" class="alert">
+              <h2>Heads up</h2>
+              <section>Themed alert surface using accent + border tokens.</section>
+            </div>
+            <input type="text" class="input" placeholder="An input" />
+            <div class="flex gap-2 items-center">
+              <span class="badge badge-destructive">Failed</span>
+              <span class="badge">Success</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
