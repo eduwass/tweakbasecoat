@@ -49,6 +49,16 @@ const PRESET = {
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const STORE_KEY = "tweakbasecoat:v1";
 
+// Share a theme as a self-contained #t=<base64> link — state round-trips through the URL,
+// nothing hits a server. btoa is latin1-only, so utf8-encode first (font stacks are ascii
+// today, but this keeps it honest).
+const encodeState = (state) => btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+const decodeState = (hash) => {
+  const m = /[#&]t=([^&]+)/.exec(hash || "");
+  if (!m) return null;
+  try { return JSON.parse(decodeURIComponent(escape(atob(m[1])))); } catch { return null; }
+};
+
 // hex (or any css color) -> "oklch(L C H)"  — the format Basecoat/Tailwind v4 ships.
 const toOklch = (value) => {
   const parsed = culori.parse(value);
@@ -169,9 +179,10 @@ Alpine.data("editor", () => ({
   shadowsOn: false, // Basecoat is flat by default; shadows are an opt-in project override.
 
   async init() {
-    // Restore the last session's edits, if any.
+    // A shared #t=… link wins over localStorage; otherwise restore the last session's edits.
+    const shared = decodeState(location.hash);
     try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      const saved = shared || JSON.parse(localStorage.getItem(STORE_KEY) || "null");
       if (saved) {
         Object.assign(this, { tokens: saved.tokens, radius: saved.radius, mode: saved.mode, pack: saved.pack, themeName: saved.themeName, shadowsOn: !!saved.shadowsOn });
         if (this.pack !== "basecoat") document.getElementById("basecoat-style").href = packHref(this.pack);
@@ -319,6 +330,7 @@ Alpine.data("editor", () => ({
     this.themeName = "Default";
     this.pack = "basecoat";
     document.getElementById("basecoat-style").href = packHref(this.pack);
+    if (location.hash.includes("t=")) history.replaceState(null, "", location.pathname);
     this.apply();
   },
 
@@ -364,6 +376,16 @@ Alpine.data("editor", () => ({
     await navigator.clipboard.writeText(this.toCss());
     this.copied = true;
     setTimeout(() => (this.copied = false), 1200);
+  },
+
+  shared: false,
+  async shareLink() {
+    const { tokens, radius, mode, pack, themeName, shadowsOn } = this;
+    const url = location.origin + location.pathname + "#t=" + encodeState({ tokens, radius, mode, pack, themeName, shadowsOn });
+    history.replaceState(null, "", url);
+    await navigator.clipboard.writeText(url);
+    this.shared = true;
+    setTimeout(() => (this.shared = false), 1400);
   },
 }));
 
