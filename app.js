@@ -80,8 +80,33 @@ const FONTS = {
   "font-mono": ["Geist Mono", "Fira Code", "JetBrains Mono", "IBM Plex Mono", "monospace"],
 };
 const FONT_KEYS = ["font-sans", "font-heading", "font-mono"];
+
+// Build the dropdown menus from the curated lists PLUS every family any preset ships,
+// so a theme's font is always selectable (themes use Lora, Oxanium, Source Serif 4, … —
+// none of which are in the hand-picked lists). Presets store fonts under font-sans /
+// font-serif / font-mono; we have no serif control, so serif families join the text menus.
+const buildFontMenus = (presets) => {
+  const text = new Set(), mono = new Set();
+  for (const p of presets) {
+    for (const t of [p.light, p.dark]) {
+      if (!t) continue;
+      for (const k of ["font-sans", "font-serif", "font-heading"]) if (t[k]) text.add(famOf(t[k]));
+      if (t["font-mono"]) mono.add(famOf(t["font-mono"]));
+    }
+  }
+  // Curated picks first (familiar order), then anything else a theme introduced, sorted.
+  const merge = (curated, seen) => {
+    const extra = [...seen].filter((f) => f && !curated.includes(f)).sort();
+    return [...curated, ...extra];
+  };
+  return {
+    "font-sans": merge(FONTS["font-sans"], new Set([...text].filter((f) => !mono.has(f)))),
+    "font-heading": merge(FONTS["font-heading"], new Set([...text].filter((f) => !mono.has(f)))),
+    "font-mono": merge(FONTS["font-mono"], mono),
+  };
+};
 const FALLBACK = { "font-sans": "sans-serif", "font-heading": "sans-serif", "font-mono": "monospace" };
-const SYSTEM_FONTS = new Set(["system-ui", "Georgia", "monospace", "serif", "sans-serif", "Arial", "Menlo"]);
+const SYSTEM_FONTS = new Set(["system-ui", "Georgia", "monospace", "serif", "sans-serif", "Arial", "Menlo", "ui-sans-serif", "ui-serif", "ui-monospace"]);
 
 // Defaults so the Typography/Shadow controls have sane values even on the built-in theme.
 const DEFAULT_TYPO = { "font-sans": "Inter, sans-serif", "font-heading": "Inter, sans-serif", "font-mono": "Geist Mono, monospace", "tracking-normal": "0em" };
@@ -159,6 +184,8 @@ Alpine.data("editor", () => ({
       const list = await (await fetch("./presets.json")).json();
       this.presets.push(...list);
     } catch (e) { console.warn("presets load failed", e); }
+    // Widen the font dropdowns to every family the loaded themes actually use.
+    this.fontMenus = buildFontMenus(this.presets);
     // Inject Basecoat's homepage kitchen-sink as the live preview.
     try {
       const html = await (await fetch("./_kitchensink.html")).text();
