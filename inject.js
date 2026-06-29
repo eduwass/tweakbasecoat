@@ -201,8 +201,12 @@ if (window.__tbInject) {
     }
   };
   themeSearch.addEventListener("input", () => renderThemeList(presets, themeSearch.value));
-  // close on outside click (composedPath crosses the shadow boundary)
-  window.addEventListener("click", (e) => { if (!themeMenu.hidden && !e.composedPath().includes(theme)) themeMenu.hidden = true; });
+  // Close on outside click. Capture phase + composedPath so it still fires on host apps
+  // (like basecoatui.com) whose own JS calls stopPropagation() on bubbling document clicks.
+  window.addEventListener("click", (e) => {
+    if (!themeMenu.hidden && !e.composedPath().includes(theme)) themeMenu.hidden = true;
+  }, true);
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") themeMenu.hidden = true; }, true);
 
   let presets = [];
   fetch(new URL("presets.json", BASE)).then((r) => r.json()).then((list) => {
