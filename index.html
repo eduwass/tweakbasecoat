@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="./app.css" />
   <script type="module" src="./app.js"></script>
 </head>
-<body x-data="editor" :class="{ 'dark': mode === 'dark' }">
+<body x-data="editor" :class="{ 'dark': mode === 'dark', 'shadows-on': shadowsOn }">
   <div class="tb-layout">
     <!-- ───────────────── Controls ───────────────── -->
     <aside class="tb-panel">
@@ -98,7 +98,7 @@
 
       <details class="tb-section" open>
         <summary class="text-sm font-medium">Typography</summary>
-        <template x-for="key in ['font-sans','font-serif','font-mono']" :key="key">
+        <template x-for="key in ['font-sans','font-heading','font-mono']" :key="key">
           <div class="tb-row">
             <label class="text-xs text-muted-foreground" x-text="key.replace('font-','')"></label>
             <select class="select" :value="fontFamily(key)" @change="setFont(key, $event.target.value)">
@@ -119,27 +119,38 @@
 
       <hr class="my-2" />
 
-      <details class="tb-section">
-        <summary class="text-sm font-medium">Shadow</summary>
-        <label class="tb-color my-1">
-          <input type="color" :value="shadowColorHex()" @input="setTok('shadow-color', $event.target.value)" />
-          <span class="text-xs text-muted-foreground">color</span>
-        </label>
-        <div class="tb-row">
-          <label class="text-xs text-muted-foreground">opacity</label>
-          <input type="range" min="0" max="1" step="0.01" :value="parseFloat(tok('shadow-opacity','0.1'))"
-                 @input="setTok('shadow-opacity', $event.target.value)" />
-          <span class="text-xs text-muted-foreground" x-text="tok('shadow-opacity','0.1')"></span>
+      <div class="tb-section">
+        <div class="tb-shadow-head">
+          <span class="tb-glabel">Shadow</span>
+          <button class="tb-switch" :class="{ 'is-on': shadowsOn }" @click="toggleShadows()"
+                  :aria-pressed="shadowsOn" title="Basecoat is flat by default; enable to opt into elevation">
+            <span class="tb-switch-knob"></span>
+          </button>
         </div>
-        <template x-for="s in [['shadow-blur','blur',0,30],['shadow-spread','spread',-10,10],['shadow-offset-x','offset x',-20,20],['shadow-offset-y','offset y',-20,20]]" :key="s[0]">
-          <div class="tb-row">
-            <label class="text-xs text-muted-foreground" x-text="s[1]"></label>
-            <input type="range" :min="s[2]" :max="s[3]" step="1" :value="shadowNum(s[0])"
-                   @input="setShadowPx(s[0], $event.target.value)" />
-            <span class="text-xs text-muted-foreground" x-text="shadowNum(s[0]) + 'px'"></span>
-          </div>
+        <template x-if="!shadowsOn">
+          <p class="tb-hint">Basecoat cards are flat. Enable to add elevation (exported as an optional override).</p>
         </template>
-      </details>
+        <div x-show="shadowsOn" class="tb-section">
+          <label class="tb-color">
+            <input type="color" :value="shadowColorHex()" @input="setTok('shadow-color', $event.target.value)" />
+            <span>color</span>
+          </label>
+          <div class="tb-row">
+            <label>opacity</label>
+            <input type="range" min="0" max="1" step="0.01" :value="parseFloat(tok('shadow-opacity','0.1'))"
+                   @input="setTok('shadow-opacity', $event.target.value)" />
+            <span x-text="tok('shadow-opacity','0.1')"></span>
+          </div>
+          <template x-for="s in [['shadow-blur','blur',0,30],['shadow-spread','spread',-10,10],['shadow-offset-x','offset x',-20,20],['shadow-offset-y','offset y',-20,20]]" :key="s[0]">
+            <div class="tb-row">
+              <label x-text="s[1]"></label>
+              <input type="range" :min="s[2]" :max="s[3]" step="1" :value="shadowNum(s[0])"
+                     @input="setShadowPx(s[0], $event.target.value)" />
+              <span x-text="shadowNum(s[0]) + 'px'"></span>
+            </div>
+          </template>
+        </div>
+      </div>
 
       <hr class="my-2" />
 

@@ -73,16 +73,18 @@ const toHsl3 = (value) => {
 };
 
 // Font menus (Google fonts + a system stack each). Token holds the full family stack.
+// Basecoat's real font tokens are --font-sans / --font-heading / --font-mono (not font-serif).
 const FONTS = {
   "font-sans": ["Inter", "Geist", "Roboto", "Open Sans", "Montserrat", "Poppins", "Outfit", "DM Sans", "system-ui"],
-  "font-serif": ["Merriweather", "Playfair Display", "Lora", "Source Serif 4", "Georgia"],
+  "font-heading": ["Inter", "Montserrat", "Poppins", "Outfit", "Playfair Display", "Space Grotesk", "system-ui"],
   "font-mono": ["Geist Mono", "Fira Code", "JetBrains Mono", "IBM Plex Mono", "monospace"],
 };
-const FALLBACK = { "font-sans": "sans-serif", "font-serif": "serif", "font-mono": "monospace" };
+const FONT_KEYS = ["font-sans", "font-heading", "font-mono"];
+const FALLBACK = { "font-sans": "sans-serif", "font-heading": "sans-serif", "font-mono": "monospace" };
 const SYSTEM_FONTS = new Set(["system-ui", "Georgia", "monospace", "serif", "sans-serif", "Arial", "Menlo"]);
 
 // Defaults so the Typography/Shadow controls have sane values even on the built-in theme.
-const DEFAULT_TYPO = { "font-sans": "Inter, sans-serif", "font-serif": "Georgia, serif", "font-mono": "Geist Mono, monospace", "tracking-normal": "0em" };
+const DEFAULT_TYPO = { "font-sans": "Inter, sans-serif", "font-heading": "Inter, sans-serif", "font-mono": "Geist Mono, monospace", "tracking-normal": "0em" };
 const DEFAULT_SHADOW = { "shadow-color": "hsl(0 0% 0%)", "shadow-opacity": "0.1", "shadow-blur": "3px", "shadow-spread": "0px", "shadow-offset-x": "0px", "shadow-offset-y": "1px" };
 
 const famOf = (stack) => (stack || "").split(",")[0].trim().replace(/['"]/g, "");
@@ -139,13 +141,14 @@ Alpine.data("editor", () => ({
   themeName: "Default",
   themeOpen: false,
   themeQuery: "",
+  shadowsOn: false, // Basecoat is flat by default; shadows are an opt-in project override.
 
   async init() {
     // Restore the last session's edits, if any.
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
       if (saved) {
-        Object.assign(this, { tokens: saved.tokens, radius: saved.radius, mode: saved.mode, pack: saved.pack, themeName: saved.themeName });
+        Object.assign(this, { tokens: saved.tokens, radius: saved.radius, mode: saved.mode, pack: saved.pack, themeName: saved.themeName, shadowsOn: !!saved.shadowsOn });
         if (this.pack !== "basecoat") document.getElementById("basecoat-style").href = packHref(this.pack);
       }
     } catch (e) { console.warn("restore failed", e); }
@@ -256,15 +259,20 @@ Alpine.data("editor", () => ({
     // Derived shadow scale (from primitives) + ensure chosen fonts are loaded.
     const shadows = computeShadowMap(t);
     for (const [k, v] of Object.entries(shadows)) root.style.setProperty(`--${k}`, v);
-    ["font-sans", "font-serif", "font-mono"].forEach((k) => loadFont(famOf(t[k] || DEFAULT_TYPO[k])));
+    FONT_KEYS.forEach((k) => loadFont(famOf(t[k] || DEFAULT_TYPO[k])));
     this.persist();
   },
 
   persist() {
-    const { tokens, radius, mode, pack, themeName } = this;
+    const { tokens, radius, mode, pack, themeName, shadowsOn } = this;
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ tokens, radius, mode, pack, themeName }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ tokens, radius, mode, pack, themeName, shadowsOn }));
     } catch (e) { /* storage full / disabled — non-fatal */ }
+  },
+
+  toggleShadows() {
+    this.shadowsOn = !this.shadowsOn;
+    this.persist();
   },
 
   reset() {
@@ -276,15 +284,42 @@ Alpine.data("editor", () => ({
     this.apply();
   },
 
-  // Serialize to a Basecoat-ready theme.css ( :root + .dark blocks ).
+  // Serialize to a Basecoat-ready theme.css. Tokens are grouped so the file is honest about
+  // what Basecoat actually consumes (colors/fonts/radius) vs extended shadcn passthrough.
   toCss() {
+    const isExtended = (k) => /^(chart-|sidebar)/.test(k);
+    const isShadow = (k) => /^shadow/.test(k);
+    const line = ([k, v]) => `  --${k}: ${cssVal(k, v)};`;
+
     const block = (sel, obj) => {
-      const lines = Object.entries(obj).map(([k, v]) => `  --${k}: ${cssVal(k, v)};`);
-      // Emit the derived shadow scale alongside the primitives.
-      for (const [k, v] of Object.entries(computeShadowMap(obj))) lines.push(`  --${k}: ${v};`);
-      return `${sel} {\n  --radius: ${this.radius}rem;\n${lines.join("\n")}\n}`;
+      const entries = Object.entries(obj).filter(([k]) => !isShadow(k));
+      const core = entries.filter(([k]) => !isExtended(k));
+      const ext = entries.filter(([k]) => isExtended(k));
+      let lines = [`  --radius: ${this.radius}rem;`, ...core.map(line)];
+      if (this.shadowsOn) {
+        lines.push("", "  /* shadow scale (opt-in elevation) */");
+        lines.push(...Object.entries(obj).filter(([k]) => isShadow(k)).map(line));
+        lines.push(...Object.entries(computeShadowMap(obj)).map(([k, v]) => `  --${k}: ${v};`));
+      }
+      if (ext.length) {
+        lines.push("", "  /* extended shadcn tokens — not consumed by Basecoat components */");
+        lines.push(...ext.map(line));
+      }
+      return `${sel} {\n${lines.join("\n")}\n}`;
     };
-    return `${block(":root", this.tokens.light)}\n\n${block(".dark", this.tokens.dark)}\n`;
+
+    let css = `${block(":root", this.tokens.light)}\n\n${block(".dark", this.tokens.dark)}\n`;
+    if (this.shadowsOn) {
+      css +=
+        "\n/* Optional elevation — Basecoat cards are flat by default. This project-level\n" +
+        "   override (docs: \"add overrides when tokens are not enough\") opts in.\n" +
+        "   Remove this @layer block to return to stock Basecoat. */\n" +
+        "@layer components {\n" +
+        "  .card { box-shadow: var(--shadow-sm); }\n" +
+        "  .popover, [role=\"dialog\"], [class*=\"menu\"] { box-shadow: var(--shadow-md); }\n" +
+        "}\n";
+    }
+    return css;
   },
 
   async copyCss() {

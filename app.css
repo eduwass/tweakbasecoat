@@ -113,6 +113,17 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 .tb-section[open] > summary::before { transform: rotate(90deg); }
 .tb-row > span { min-width: 2.8rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--pc-muted); font-size: 11.5px; }
 
+/* ── Shadow toggle ── */
+.tb-shadow-head { display: flex; align-items: center; justify-content: space-between; }
+.tb-switch {
+  width: 34px; height: 19px; border-radius: 999px; border: 0; padding: 2px; cursor: pointer;
+  background: #d4d4da; transition: background .15s; display: inline-flex; align-items: center;
+}
+.tb-switch.is-on { background: var(--pc-accent); }
+.tb-switch-knob { width: 15px; height: 15px; border-radius: 999px; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+.tb-switch.is-on .tb-switch-knob { transform: translateX(15px); }
+.tb-hint { font-size: 11.5px; color: var(--pc-muted); margin: .1rem 0 0; line-height: 1.45; }
+
 /* ── Footer actions ── */
 .tb-actions {
   display: flex; gap: .5rem; margin: auto -1rem 0; padding: .8rem 1rem;
@@ -126,8 +137,10 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 
 .tb-preview { padding: 2rem; overflow-y: auto; }
 
-/* Basecoat's .card ships a hardcoded box-shadow that ignores the --shadow-* tokens, so the
-   Shadow controls would otherwise have nothing to drive. Bind the preview surfaces to the
-   editable scale (id selector beats the bundle's .card without !important). */
-#preview .card { box-shadow: var(--shadow-sm); }
-#preview [class*="menu"], #preview .popover, #preview [role="dialog"] { box-shadow: var(--shadow-md); }
+/* Basecoat cards are flat by default. Only when shadows are toggled on do we bind the preview
+   surfaces to the editable --shadow-* scale — mirroring the optional project override the
+   export emits, so what you see equals what you ship. */
+body.shadows-on #preview .card { box-shadow: var(--shadow-sm); }
+body.shadows-on #preview [class*="menu"],
+body.shadows-on #preview .popover,
+body.shadows-on #preview [role="dialog"] { box-shadow: var(--shadow-md); }
