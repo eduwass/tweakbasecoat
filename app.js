@@ -68,8 +68,15 @@ Alpine.data("editor", () => ({
   tokens: clone(PRESET),
   copied: false,
 
-  init() {
+  async init() {
     this.apply();
+    // Inject Basecoat's homepage kitchen-sink as the live preview.
+    try {
+      const html = await (await fetch("./_kitchensink.html")).text();
+      document.getElementById("preview").innerHTML = html;
+    } catch (e) {
+      console.warn("kitchensink load failed", e);
+    }
   },
 
   hexOf(key) {

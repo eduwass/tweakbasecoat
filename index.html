@@ -4,10 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>tweakbasecoat — visual theme editor for Basecoat</title>
-  <!-- Basecoat: self-contained CDN bundle (Tailwind utilities + components + base theme).
-       Swapped at runtime by the style-pack selector. id lets us change the href. -->
-  <link id="basecoat-style" rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/basecoat.cdn.min.css" />
+  <!-- Tailwind utilities + Basecoat components, precompiled against the kitchen-sink markup.
+       (The CDN component bundle alone lacks the raw Tailwind layout utilities the demo uses.) -->
+  <link id="basecoat-style" rel="stylesheet" href="./preview.css" />
   <link rel="stylesheet" href="./app.css" />
   <script type="module" src="./app.js"></script>
 </head>
@@ -58,58 +57,8 @@
     </aside>
 
     <!-- ───────────────── Preview ───────────────── -->
-    <main class="tb-preview">
-      <div class="flex gap-2 flex-wrap items-center">
-        <button class="btn">Primary</button>
-        <button class="btn btn-secondary">Secondary</button>
-        <button class="btn btn-destructive">Destructive</button>
-        <button class="btn btn-outline">Outline</button>
-        <button class="btn btn-ghost">Ghost</button>
-        <span class="badge">Badge</span>
-        <span class="badge badge-secondary">Secondary</span>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-2 mt-6">
-        <div class="card">
-          <header>
-            <h2>Create an account</h2>
-            <p>Enter your email below to create your account.</p>
-          </header>
-          <section class="grid gap-4">
-            <div class="grid gap-2">
-              <label class="label" for="email">Email</label>
-              <input type="email" class="input" id="email" placeholder="m@example.com" />
-            </div>
-            <div class="grid gap-2">
-              <label class="label" for="pw">Password</label>
-              <input type="password" class="input" id="pw" />
-            </div>
-          </section>
-          <footer class="flex gap-2">
-            <button class="btn-outline">Cancel</button>
-            <button class="btn">Create account</button>
-          </footer>
-        </div>
-
-        <div class="card">
-          <header>
-            <h2>Move Goal</h2>
-            <p>Set your daily activity goal.</p>
-          </header>
-          <section class="grid gap-3">
-            <div role="alert" class="alert">
-              <h2>Heads up</h2>
-              <section>Themed alert surface using accent + border tokens.</section>
-            </div>
-            <input type="text" class="input" placeholder="An input" />
-            <div class="flex gap-2 items-center">
-              <span class="badge badge-destructive">Failed</span>
-              <span class="badge">Success</span>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
+    <!-- Basecoat's own homepage kitchen-sink, lifted verbatim and injected at runtime. -->
+    <main class="tb-preview" id="preview"></main>
   </div>
 </body>
 </html>
