@@ -125,3 +125,9 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 .tb-actions .tb-ghost:hover { background: var(--pc-subtle); }
 
 .tb-preview { padding: 2rem; overflow-y: auto; }
+
+/* Basecoat's .card ships a hardcoded box-shadow that ignores the --shadow-* tokens, so the
+   Shadow controls would otherwise have nothing to drive. Bind the preview surfaces to the
+   editable scale (id selector beats the bundle's .card without !important). */
+#preview .card { box-shadow: var(--shadow-sm); }
+#preview [class*="menu"], #preview .popover, #preview [role="dialog"] { box-shadow: var(--shadow-md); }
