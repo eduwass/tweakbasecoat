@@ -248,18 +248,29 @@ Alpine.data("editor", () => ({
     requestAnimationFrame(() => this.apply());
   },
 
+  _applied: null, // keys written on the last apply(), to clear stale ones on theme switch
+
   // The lifted core: write every token as a CSS custom property on :root.
   apply() {
     const root = document.documentElement;
     const t = this.tokens[this.mode];
+    const set = new Set();
     for (const [k, v] of Object.entries(t)) {
       root.style.setProperty(`--${k}`, cssVal(k, v));
+      set.add(k);
     }
     root.style.setProperty("--radius", `${this.radius}rem`);
+    set.add("radius");
     // Derived shadow scale (from primitives) + ensure chosen fonts are loaded.
-    const shadows = computeShadowMap(t);
-    for (const [k, v] of Object.entries(shadows)) root.style.setProperty(`--${k}`, v);
+    for (const [k, v] of Object.entries(computeShadowMap(t))) {
+      root.style.setProperty(`--${k}`, v);
+      set.add(k);
+    }
     FONT_KEYS.forEach((k) => loadFont(famOf(t[k] || DEFAULT_TYPO[k])));
+    // Remove props a previous theme set that the current one doesn't define, so switching
+    // back to a sparser theme (e.g. Default) doesn't inherit the old theme's fonts/colors.
+    if (this._applied) for (const k of this._applied) if (!set.has(k)) root.style.removeProperty(`--${k}`);
+    this._applied = set;
     this.persist();
   },
 
