@@ -51,12 +51,78 @@ const STORE_KEY = "tweakbasecoat:v1";
 
 // hex (or any css color) -> "oklch(L C H)"  — the format Basecoat/Tailwind v4 ships.
 const toOklch = (value) => {
-  const c = culori.converter("oklch")(culori.parse(value));
+  const parsed = culori.parse(value);
+  if (!parsed) return value;
+  const c = culori.converter("oklch")(parsed);
   if (!c) return value;
   const n = (x) => (x === undefined ? 0 : Number(x.toFixed(4)));
   return `oklch(${n(c.l)} ${n(c.c)} ${n(c.h)})`;
 };
 const toHex = (value) => culori.formatHex(culori.parse(value)) || "#000000";
+
+// Non-color tokens (fonts, shadow primitives, tracking) pass through verbatim — don't oklch them.
+const isNonColor = (k) => /^(font-|shadow-|tracking|letter-spacing|spacing$)/.test(k);
+const cssVal = (k, v) => (isNonColor(k) ? v : toOklch(v));
+
+// "H S% L%" (Tailwind v3 / shadow style, no hsl() wrapper).
+const toHsl3 = (value) => {
+  const c = culori.converter("hsl")(culori.parse(value));
+  if (!c) return "0 0% 0%";
+  const n = (x) => (x === undefined ? 0 : x % 1 === 0 ? x : Number(x.toFixed(2)));
+  return `${n(c.h)} ${n((c.s || 0) * 100)}% ${n((c.l || 0) * 100)}%`;
+};
+
+// Font menus (Google fonts + a system stack each). Token holds the full family stack.
+const FONTS = {
+  "font-sans": ["Inter", "Geist", "Roboto", "Open Sans", "Montserrat", "Poppins", "Outfit", "DM Sans", "system-ui"],
+  "font-serif": ["Merriweather", "Playfair Display", "Lora", "Source Serif 4", "Georgia"],
+  "font-mono": ["Geist Mono", "Fira Code", "JetBrains Mono", "IBM Plex Mono", "monospace"],
+};
+const FALLBACK = { "font-sans": "sans-serif", "font-serif": "serif", "font-mono": "monospace" };
+const SYSTEM_FONTS = new Set(["system-ui", "Georgia", "monospace", "serif", "sans-serif", "Arial", "Menlo"]);
+
+// Defaults so the Typography/Shadow controls have sane values even on the built-in theme.
+const DEFAULT_TYPO = { "font-sans": "Inter, sans-serif", "font-serif": "Georgia, serif", "font-mono": "Geist Mono, monospace", "tracking-normal": "0em" };
+const DEFAULT_SHADOW = { "shadow-color": "hsl(0 0% 0%)", "shadow-opacity": "0.1", "shadow-blur": "3px", "shadow-spread": "0px", "shadow-offset-x": "0px", "shadow-offset-y": "1px" };
+
+const famOf = (stack) => (stack || "").split(",")[0].trim().replace(/['"]/g, "");
+
+// Ported verbatim from tweakcn's getShadowMap — derives the --shadow-* scale from 6 primitives.
+const computeShadowMap = (s) => {
+  const hsl = toHsl3(s["shadow-color"] || DEFAULT_SHADOW["shadow-color"]);
+  const ox = s["shadow-offset-x"] || DEFAULT_SHADOW["shadow-offset-x"];
+  const oy = s["shadow-offset-y"] || DEFAULT_SHADOW["shadow-offset-y"];
+  const blur = s["shadow-blur"] || DEFAULT_SHADOW["shadow-blur"];
+  const spread = s["shadow-spread"] || DEFAULT_SHADOW["shadow-spread"];
+  const opacity = parseFloat(s["shadow-opacity"] ?? DEFAULT_SHADOW["shadow-opacity"]);
+  const color = (m) => `hsl(${hsl} / ${(opacity * m).toFixed(2)})`;
+  const second = (fy, fb) => {
+    const sp = (parseFloat((spread || "0").replace("px", "")) - 1).toString() + "px";
+    return `${ox} ${fy} ${fb} ${sp} ${color(1.0)}`;
+  };
+  return {
+    "shadow-2xs": `${ox} ${oy} ${blur} ${spread} ${color(0.5)}`,
+    "shadow-xs": `${ox} ${oy} ${blur} ${spread} ${color(0.5)}`,
+    "shadow-sm": `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("1px", "2px")}`,
+    shadow: `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("1px", "2px")}`,
+    "shadow-md": `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("2px", "4px")}`,
+    "shadow-lg": `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("4px", "6px")}`,
+    "shadow-xl": `${ox} ${oy} ${blur} ${spread} ${color(1.0)}, ${second("8px", "10px")}`,
+    "shadow-2xl": `${ox} ${oy} ${blur} ${spread} ${color(2.5)}`,
+  };
+};
+
+// Inject a Google Fonts <link> once per family.
+const loadFont = (family) => {
+  if (!family || SYSTEM_FONTS.has(family)) return;
+  const id = "gf-" + family.replace(/\s+/g, "-").toLowerCase();
+  if (document.getElementById(id)) return;
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${family.replace(/\s+/g, "+")}:wght@400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+};
 
 window.Alpine = Alpine; // expose for devtools/debugging
 
@@ -133,6 +199,41 @@ Alpine.data("editor", () => ({
     this.apply();
   },
 
+  fontMenus: FONTS,
+
+  // Read a token (current mode) with a default fallback.
+  tok(key, fallback) {
+    return this.tokens[this.mode]?.[key] ?? fallback;
+  },
+
+  // Typography + shadow tokens aren't mode-specific in practice — write to both modes.
+  setTok(key, value) {
+    this.tokens.light[key] = value;
+    this.tokens.dark[key] = value;
+    this.apply();
+  },
+
+  fontFamily(key) {
+    return famOf(this.tok(key, DEFAULT_TYPO[key]));
+  },
+
+  setFont(key, family) {
+    const value = SYSTEM_FONTS.has(family) ? family : `${family}, ${FALLBACK[key]}`;
+    loadFont(family);
+    this.setTok(key, value);
+  },
+
+  // Shadow primitive helpers (strip/restore the px suffix for sliders).
+  shadowNum(key) {
+    return parseFloat(String(this.tok(key, DEFAULT_SHADOW[key])).replace("px", "")) || 0;
+  },
+  setShadowPx(key, n) {
+    this.setTok(key, `${n}px`);
+  },
+  shadowColorHex() {
+    return toHex(this.tok("shadow-color", DEFAULT_SHADOW["shadow-color"]));
+  },
+
   toggleMode() {
     this.mode = this.mode === "dark" ? "light" : "dark";
     this.apply();
@@ -149,9 +250,13 @@ Alpine.data("editor", () => ({
     const root = document.documentElement;
     const t = this.tokens[this.mode];
     for (const [k, v] of Object.entries(t)) {
-      root.style.setProperty(`--${k}`, toOklch(v));
+      root.style.setProperty(`--${k}`, cssVal(k, v));
     }
     root.style.setProperty("--radius", `${this.radius}rem`);
+    // Derived shadow scale (from primitives) + ensure chosen fonts are loaded.
+    const shadows = computeShadowMap(t);
+    for (const [k, v] of Object.entries(shadows)) root.style.setProperty(`--${k}`, v);
+    ["font-sans", "font-serif", "font-mono"].forEach((k) => loadFont(famOf(t[k] || DEFAULT_TYPO[k])));
     this.persist();
   },
 
@@ -173,11 +278,12 @@ Alpine.data("editor", () => ({
 
   // Serialize to a Basecoat-ready theme.css ( :root + .dark blocks ).
   toCss() {
-    const block = (sel, obj) =>
-      `${sel} {\n` +
-      `  --radius: ${this.radius}rem;\n` +
-      Object.entries(obj).map(([k, v]) => `  --${k}: ${toOklch(v)};`).join("\n") +
-      `\n}`;
+    const block = (sel, obj) => {
+      const lines = Object.entries(obj).map(([k, v]) => `  --${k}: ${cssVal(k, v)};`);
+      // Emit the derived shadow scale alongside the primitives.
+      for (const [k, v] of Object.entries(computeShadowMap(obj))) lines.push(`  --${k}: ${v};`);
+      return `${sel} {\n  --radius: ${this.radius}rem;\n${lines.join("\n")}\n}`;
+    };
     return `${block(":root", this.tokens.light)}\n\n${block(".dark", this.tokens.dark)}\n`;
   },
 

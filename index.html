@@ -90,6 +90,55 @@
         </template>
       </div>
 
+      <hr class="my-2" />
+
+      <details class="tb-section" open>
+        <summary class="text-sm font-medium">Typography</summary>
+        <template x-for="key in ['font-sans','font-serif','font-mono']" :key="key">
+          <div class="tb-row">
+            <label class="text-xs text-muted-foreground" x-text="key.replace('font-','')"></label>
+            <select class="select" :value="fontFamily(key)" @change="setFont(key, $event.target.value)">
+              <template x-for="f in fontMenus[key]" :key="f">
+                <option :value="f" x-text="f"></option>
+              </template>
+            </select>
+          </div>
+        </template>
+        <div class="tb-row">
+          <label class="text-xs text-muted-foreground">letter spacing</label>
+          <input type="range" min="-0.05" max="0.1" step="0.005"
+                 :value="parseFloat(tok('tracking-normal','0em'))"
+                 @input="setTok('tracking-normal', $event.target.value + 'em')" />
+          <span class="text-xs text-muted-foreground" x-text="tok('tracking-normal','0em')"></span>
+        </div>
+      </details>
+
+      <hr class="my-2" />
+
+      <details class="tb-section">
+        <summary class="text-sm font-medium">Shadow</summary>
+        <label class="tb-color my-1">
+          <input type="color" :value="shadowColorHex()" @input="setTok('shadow-color', $event.target.value)" />
+          <span class="text-xs text-muted-foreground">color</span>
+        </label>
+        <div class="tb-row">
+          <label class="text-xs text-muted-foreground">opacity</label>
+          <input type="range" min="0" max="1" step="0.01" :value="parseFloat(tok('shadow-opacity','0.1'))"
+                 @input="setTok('shadow-opacity', $event.target.value)" />
+          <span class="text-xs text-muted-foreground" x-text="tok('shadow-opacity','0.1')"></span>
+        </div>
+        <template x-for="s in [['shadow-blur','blur',0,30],['shadow-spread','spread',-10,10],['shadow-offset-x','offset x',-20,20],['shadow-offset-y','offset y',-20,20]]" :key="s[0]">
+          <div class="tb-row">
+            <label class="text-xs text-muted-foreground" x-text="s[1]"></label>
+            <input type="range" :min="s[2]" :max="s[3]" step="1" :value="shadowNum(s[0])"
+                   @input="setShadowPx(s[0], $event.target.value)" />
+            <span class="text-xs text-muted-foreground" x-text="shadowNum(s[0]) + 'px'"></span>
+          </div>
+        </template>
+      </details>
+
+      <hr class="my-2" />
+
       <div class="tb-actions">
         <button class="btn" @click="copyCss()" x-text="copied ? 'Copied!' : 'Copy theme.css'"></button>
         <button class="btn-outline" @click="reset()">Reset</button>

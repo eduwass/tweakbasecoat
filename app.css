@@ -38,6 +38,12 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
 .tb-theme-item:hover { background: var(--muted); }
 .tb-theme-item.is-active { background: var(--accent); color: var(--accent-foreground); }
 
+.tb-section { display: flex; flex-direction: column; gap: .4rem; }
+.tb-section > summary { cursor: pointer; list-style: revert; }
+.tb-section .select { max-width: 11rem; }
+.tb-section .tb-row label { white-space: nowrap; }
+.tb-section .tb-row span { min-width: 2.6rem; text-align: right; }
+
 .tb-row { display: flex; align-items: center; gap: .5rem; justify-content: space-between; }
 .tb-row input[type="range"] { flex: 1; }
 
